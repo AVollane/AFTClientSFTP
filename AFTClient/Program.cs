@@ -15,6 +15,8 @@ namespace AFTClient
         {
             string remoteDirectory = ConfigurationManager.AppSettings.Get("RemoteDirectory");
             string savingDirectory = ConfigurationManager.AppSettings.Get("SavingDirectory");
+            string logFilePath = ConfigurationManager.AppSettings.Get("LogFilePath");
+            Logger logger = new Logger(logFilePath);
             Receiver receiver;
             try
             {
@@ -23,9 +25,10 @@ namespace AFTClient
                 receiver.DownloadFiles(remoteDirectory, savingDirectory);
                 receiver.Disconnect();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                
+                Console.WriteLine(ex.Message);
+                logger.Log(ex.Message);
             }
         }
 

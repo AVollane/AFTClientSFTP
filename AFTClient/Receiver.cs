@@ -16,6 +16,7 @@ namespace AFTClient
         private string _host;
         private string _username;
         private string _password;
+        private Logger _logger;
 
         public Receiver(string host, string username, string password)
         {
@@ -23,6 +24,8 @@ namespace AFTClient
             _username = username;
             _password = password;
             _client = new SftpClient(_host, _username, _password);
+            string logFilePath = ConfigurationManager.AppSettings.Get("LogFilePath");
+            _logger = new Logger(logFilePath);
         }
 
         public void Connect() => _client.Connect();
@@ -32,6 +35,8 @@ namespace AFTClient
         {
             if (localDirectory.EndsWith('/'))
                 localDirectory += @"/";
+            if (remoteDirectory.EndsWith('/'))
+                remoteDirectory += @"/";
 
             // Файлы, которые начинаются с точки, являются системными. Мы не должны их скачивать,
             // по этому фильтруем названия
@@ -40,7 +45,16 @@ namespace AFTClient
             foreach(SftpFile file in files)
             {
                 using (Stream stream = File.OpenWrite($"{localDirectory}/{file.Name}"))
-                    _client.DownloadFile(remoteDirectory + file.Name, stream);
+                {
+                    try
+                    {
+                        _client.DownloadFile(remoteDirectory + file.Name, stream);
+                    }
+                    catch(Exception ex)
+                    {
+                        continue;
+                    }
+                }
             }
         }
     }
