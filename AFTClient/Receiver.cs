@@ -28,9 +28,29 @@ namespace AFTClient
             _logger = new Logger(logFilePath);
         }
 
+        public bool IsConnected
+        {
+            get
+            {
+                return _client.IsConnected;
+            }
+        }
+
+        /// <summary>
+        /// Подключается к удаленному SFTP-серверу
+        /// </summary>
         public void Connect() => _client.Connect();
+
+        /// <summary>
+        /// Отсоединяемся от удаленного SFTP-сервера
+        /// </summary>
         public void Disconnect() => _client.Disconnect();
 
+        /// <summary>
+        /// Скачивает все файлы из удаленной директории в локальную директорию
+        /// </summary>
+        /// <param name="remoteDirectory">Удаленная директория</param>
+        /// <param name="localDirectory">Локальная директория</param>
         public void DownloadFiles(string remoteDirectory, string localDirectory)
         {
             if (localDirectory.EndsWith('/'))
@@ -44,16 +64,16 @@ namespace AFTClient
 
             foreach(SftpFile file in files)
             {
-                using (Stream stream = File.OpenWrite($"{localDirectory}/{file.Name}"))
+                try
                 {
-                    try
+                    using (FileStream fileStream = new FileStream($"{localDirectory}/{file.Name}", FileMode.OpenOrCreate, FileAccess.Write))
                     {
-                        _client.DownloadFile(remoteDirectory + file.Name, stream);
+                        _client.DownloadFile($"{remoteDirectory}/{file.Name}", fileStream);
                     }
-                    catch(Exception ex)
-                    {
-                        continue;
-                    }
+                }
+                catch(Exception ex)
+                {
+                    continue;
                 }
             }
         }
